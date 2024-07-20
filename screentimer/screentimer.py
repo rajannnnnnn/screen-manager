@@ -67,7 +67,7 @@ def draw_timeline(date):
                 hour=True
             n+=1
     return day_splitted[:-12]
-def screen_time_report(date,timeline=False):
+def screen_time_report(date):
     line="---------------------------------------------------"
     report = f"echo {line}&echo ScreenTime Report for {date} &echo {line} &"
     report+=f"title ScreenTime Report for {date} &"
@@ -97,13 +97,62 @@ def screen_time_report(date,timeline=False):
     else:
         report+=f" echo {line} & echo Total spent :   [ {open_time.strftime('%H:%M:%S')} - {end.strftime('%H:%M:%S')} ]    {total} "
     report+=f"&echo {line}&echo (Note: acuracy error {acur_bug} seconds) &echo (Note: Session is seperated with atleast {sess_gap} seconds) &"
-    if timeline:
-        report+=f"echo                                                                   .  & echo {draw_timeline(date)} &"
+    report+=f"echo                                                                   .  & echo {draw_timeline(date)} &"
+    report+=f"echo                                                                   .  & echo O - when screen is on & echo : - when screen is off &"
+    report+=f"echo                                                                   .   {fetch_short_screen_time_report('2024-7-1','2024-07-31')} &"
+
+    
     report+="set /p in= "
     return report
-def show_report(date,timeline=False):
-    threading.Thread(target=os.system,args=(screen_time_report(date,timeline),)).start()
+def fetch_short_screen_time_report(date_from,date_to):
+    line="-----------------------------------------------------------------------------------------"
+    date_from=datetime.datetime.strptime(date_from, "%Y-%m-%d")
+    date_to=datetime.datetime.strptime(date_to, "%Y-%m-%d")
+    space=""
+    report=""
+    short_screen_times=[]
+    spacing_dic={"Sunday":2,"Monday":15,"Tuesday":28,"Wednesday":41,"Thursday":54,"Friday":67,"Saturday":80}
+    first_entry=True
+    while(not str(date_to-date_from)[:str(date_to-date_from).find(",")].replace(" days","") == "-1 day"):
+        data=cur.execute(f"select * from screentime where date='{str(date_from)[:10]}'").fetchall()
+        n=0
+        total=datetime.timedelta(seconds=0)
+        for session in data:
+            n=n+1
+            start=datetime.datetime.strptime(session[1], "%Y-%m-%d %H:%M:%S")
+            end=datetime.datetime.strptime(session[2], "%Y-%m-%d %H:%M:%S")
+            if n==1:
+                open_time=start
+            diff=end-start
+            total+=diff
+        if n==0:
+            hour="  -  "
+        else:
+            if len(str(total))==7:
+                hour=f"0{str(total)[:-3]}"
+            else:
+                hour=f"{str(total)[:-3]}"
+        if int(date_from.day)==1 or first_entry:
+            report+=f" & echo {line} {date_from.year} {date_from.strftime('%B')}& echo     Sun          Mon          \
+Tue          Wed          Thu          Fri          Sat & echo {line} & echo"
+            for i in range(spacing_dic[date_from.strftime('%A')]):
+                space+=" "
+        elif date_from.strftime('%A')=="Sunday":
+            report+="& echo  "    
+        if date_from.day<10:
+            report+=f"{space} {date_from.day}) {hour}    "
+        else:
+            report+=f"{space}{date_from.day}) {hour}    "
+        space=""      
+        first_entry=False
+        date_from+=datetime.timedelta(days=1)
+    report+=f"& echo {line}"
+    return report
+def show_report(date):
+    threading.Thread(target=os.system,args=(screen_time_report(date),)).start()
 def start_monitoring():
     while True:
         screen_time_update()
         time.sleep(acur_bug)
+if __name__=="__main__":
+    show_report("today")
