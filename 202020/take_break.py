@@ -133,10 +133,10 @@ def interval():
     #if is_system_audio_set():                              #-----------UNDER DEVELOPMENT-------#
     #    volume=get_system_volume()                         #uncomment if volume hightligh needed
     #    set_system_volume(1)                               #uncomment if volume hightligh needed
-    content = get_content()
-    if content is not None:
-        time.sleep(3)
-        threading.Thread(target=speak_two,args=(content,)).start()
+##    content = get_content()
+##    if content is not None:
+##        time.sleep(3)
+##        threading.Thread(target=speak_two,args=(content,)).start()
     return current_brightness[0],volume                    #uncomment if volume hightligh needed
 def interval_off(screen_audio_level):
     sbc.set_brightness(100, display=0)
