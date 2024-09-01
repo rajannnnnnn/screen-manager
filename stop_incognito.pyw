@@ -14,7 +14,7 @@ def stop_incognito():
     for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
         try:
             if "chrome.exe" in str(proc.name):
-                if "--disable-databases" in str(proc.cmdline()):
+                if "--disable-databases" in str(proc.cmdline()):  # indicates "incognito"
                     os.system(f"taskkill /f /pid {proc.pid}")     # stop incognito
                     #terminate_chrome()                           # terminate entire chrome
                     #os.system('shutdown /s /t 40 /c " " ')       # shutdown
